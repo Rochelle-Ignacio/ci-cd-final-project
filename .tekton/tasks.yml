@@ -1,6 +1,18 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  name: cleanup
+spec:
+  steps:
+    - name: cleanup
+      image: alpine:latest
+      script: |
+        rm -rf /workspace/tmp/*
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
   name: lint-task
 spec:
   steps:
@@ -16,7 +28,6 @@ spec:
         - name: PYTHONUSERBASE
           value: "/tmp/.local"
       script: |
-        #!/bin/sh
         python -m pip install --user flake8
         /tmp/.local/bin/flake8 service --count --select=E9,F63,F7,F82 --show-source --statistics || true
         /tmp/.local/bin/flake8 service --count --max-complexity=10 --max-line-length=127 --statistics || true
@@ -40,7 +51,7 @@ spec:
         - name: PYTHONUSERBASE
           value: "/tmp/.local"
       script: |
-        #!/bin/sh
         python -m pip install --user nose
         /tmp/.local/bin/nosetests -v --with-spec --spec-color --with-coverage --cover-package=app || true
+
 
