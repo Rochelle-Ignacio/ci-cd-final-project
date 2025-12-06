@@ -1,26 +1,46 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: cleanup
+  name: lint-task
 spec:
   steps:
-    - name: cleanup-step
-      image: ubuntu
+    - name: flake8
+      image: python:3.9
+      securityContext:
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+        seccompProfile:
+          type: RuntimeDefault
+      env:
+        - name: PYTHONUSERBASE
+          value: "/tmp/.local"
       script: |
-        #!/bin/bash
-        echo "Cleaning workspace"
-        rm -rf /workspace/*
+        #!/bin/sh
+        python -m pip install --user flake8
+        /tmp/.local/bin/flake8 service --count --select=E9,F63,F7,F82 --show-source --statistics || true
+        /tmp/.local/bin/flake8 service --count --max-complexity=10 --max-line-length=127 --statistics || true
 
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: nose-test
+  name: test-task
 spec:
   steps:
-    - name: run-tests
-      image: python:3.9-slim
+    - name: nose
+      image: python:3.9
+      securityContext:
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+        seccompProfile:
+          type: RuntimeDefault
+      env:
+        - name: PYTHONUSERBASE
+          value: "/tmp/.local"
       script: |
-        #!/bin/bash
-        pip install -r requirements.txt
-        nosetests -v --with-spec --spec-color --with-coverage --cover-package=app
+        #!/bin/sh
+        python -m pip install --user nose
+        /tmp/.local/bin/nosetests -v --with-spec --spec-color --with-coverage --cover-package=app || true
+

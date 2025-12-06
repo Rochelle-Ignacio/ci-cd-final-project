@@ -1,1 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ci-cd-pipeline
+spec:
+  tasks:
+    - name: lint
+      taskRef:
+        name: lint-task
+    - name: test
+      taskRef:
+        name: test-task
 
